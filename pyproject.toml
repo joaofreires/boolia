@@ -26,6 +26,7 @@ classifiers = [
 dependencies = []
 
 [project.optional-dependencies]
+test = ["pytest>=7.0"]
 dev = ["pytest>=7.0", "ruff>=0.5.7", "mypy>=1.11.0"]
 
 [tool.hatch.build.targets.wheel]
@@ -52,3 +53,16 @@ strict_equality = true
 ignore_missing_imports = true
 allow_redefinition = true
 check_untyped_defs = true
+
+[tool.pytest.ini_options]
+addopts = [
+  "-ra",
+  "--strict-config",
+  "--strict-markers",
+]
+testpaths = ["tests"]
+pythonpath = ["."]
+filterwarnings = [
+  "error::DeprecationWarning",
+  "ignore::UserWarning:pkg_resources",
+]
