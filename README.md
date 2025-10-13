@@ -54,8 +54,8 @@ from boolia import evaluate, DEFAULT_FUNCTIONS
 
 DEFAULT_FUNCTIONS.register("starts_with", lambda s, p: str(s).startswith(str(p)))
 
-expr = "starts_with(user.name, 'Jo')"
-print(evaluate(expr, context={"user": {"name": "João"}}))  # True
+expr = "starts_with(user.name, 'Sn')"
+print(evaluate(expr, context={"user": {"name": "Snoopy"}}))  # True
 ```
 
 ### RuleBook
