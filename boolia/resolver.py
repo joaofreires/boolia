@@ -3,6 +3,7 @@ from .errors import MissingVariableError
 
 MissingPolicy = Literal["raise", "none", "false", "default"]
 
+
 def default_resolver_factory(
     context: Dict[str, Any],
     *,
@@ -10,6 +11,7 @@ def default_resolver_factory(
     default_value: Any = None,
 ) -> Callable[[List[str]], Any]:
     """Resolve dotted paths in nested dicts with a configurable missing policy."""
+
     def _missing(parts: List[str]) -> Any:
         if on_missing == "raise":
             raise MissingVariableError(parts)
@@ -27,4 +29,5 @@ def default_resolver_factory(
             else:
                 return _missing(parts)
         return cur
+
     return resolve

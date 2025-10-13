@@ -7,15 +7,17 @@ from .ast import Node
 from .resolver import default_resolver_factory, MissingPolicy
 from .functions import FunctionRegistry, DEFAULT_FUNCTIONS
 
+
 def compile_expr(source: str) -> Node:
     return parse(source)
+
 
 def evaluate(
     source_or_ast: Union[str, Node],
     *,
     context: Optional[Dict[str, Any]] = None,
     tags: Optional[Set[str]] = None,
-    resolver = None,
+    resolver=None,
     on_missing: MissingPolicy = "false",
     default_value: Any = None,
     functions: Optional[FunctionRegistry] = None,
@@ -28,14 +30,18 @@ def evaluate(
     out = node.eval(res, tg, fns)
     return bool(out)
 
+
 @dataclass
 class Rule:
     ast: Node
+
     def evaluate(self, **kwargs) -> bool:
         return evaluate(self.ast, **kwargs)
 
+
 def compile_rule(source: str) -> Rule:
     return Rule(compile_expr(source))
+
 
 class RuleBook:
     def __init__(self):

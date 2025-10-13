@@ -4,7 +4,14 @@ from .errors import MissingVariableError
 from .functions import FunctionRegistry, DEFAULT_FUNCTIONS
 
 __all__ = [
-    "evaluate", "compile_expr", "compile_rule", "Rule", "RuleBook",
-    "default_resolver_factory", "MissingPolicy",
-    "MissingVariableError", "FunctionRegistry", "DEFAULT_FUNCTIONS",
+    "evaluate",
+    "compile_expr",
+    "compile_rule",
+    "Rule",
+    "RuleBook",
+    "default_resolver_factory",
+    "MissingPolicy",
+    "MissingVariableError",
+    "FunctionRegistry",
+    "DEFAULT_FUNCTIONS",
 ]

@@ -21,6 +21,18 @@ print(evaluate(expr, context={"house": {"light": {"on": True}}}, tags={"car"})) 
 ```bash
 pip install -e .[dev]
 pytest -q
+ruff check .
+mypy .
+```
+
+## Tooling
+
+The project ships with Ruff for linting and MyPy for type checking. After installing the
+development extras you can run the primary checks with:
+
+```bash
+ruff check .
+mypy .
 ```
 
 ## Quick start

@@ -1,6 +1,7 @@
-from typing import List, Tuple, Any, Optional
+from typing import List, Optional
 from .lexer import tokenize, Token
 from .ast import Node, Literal, Name, Unary, Binary, Call
+
 
 class Parser:
     def __init__(self, tokens: List[Token]):
@@ -27,8 +28,14 @@ class Parser:
     BP = {
         "OR": 10,
         "AND": 20,
-        "NOT": 30,    # unary
-        "EQ": 40, "NE": 40, "GT": 40, "LT": 40, "GE": 40, "LE": 40, "IN": 40,
+        "NOT": 30,  # unary
+        "EQ": 40,
+        "NE": 40,
+        "GT": 40,
+        "LT": 40,
+        "GE": 40,
+        "LE": 40,
+        "IN": 40,
     }
 
     def parse(self) -> Node:
@@ -61,10 +68,14 @@ class Parser:
             expr = self.expression(0)
             self.expect("RPAREN")
             return expr
-        if typ == "NUMBER": return Literal(val)
-        if typ == "STRING": return Literal(val)
-        if typ == "BOOL":   return Literal(val)
-        if typ == "NULL":   return Literal(None)
+        if typ == "NUMBER":
+            return Literal(val)
+        if typ == "STRING":
+            return Literal(val)
+        if typ == "BOOL":
+            return Literal(val)
+        if typ == "NULL":
+            return Literal(None)
         if typ == "IDENT":
             # function call or dotted name
             if self.take("LPAREN"):
@@ -83,8 +94,7 @@ class Parser:
                 parts.append(nxt[1])
             return Name(parts)
         if typ == "NOT":
-            right = self.expression(self.BP["NOT"]
-            )
+            right = self.expression(self.BP["NOT"])
             return Unary("NOT", right)
         raise SyntaxError(f"Unexpected token: {t}")
 
@@ -94,6 +104,7 @@ class Parser:
             right = self.expression(self.BP[typ])
             return Binary(left, typ, right)
         raise SyntaxError(f"Unexpected infix token: {t}")
+
 
 def parse(source: str) -> Node:
     return Parser(tokenize(source)).parse()
