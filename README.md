@@ -17,13 +17,10 @@ expr = "(car and elephant) or house.light.on"
 print(evaluate(expr, context={"house": {"light": {"on": True}}}, tags={"car"}))  # True
 ```
 
-## Install (local)
+## Install
 
 ```bash
-pip install -e .[dev]
-pytest -q
-ruff check .
-mypy .
+pip install boolia
 ```
 
 ## Tooling
@@ -106,3 +103,12 @@ print(evaluate("flag and beta", context={}, tags={"beta"}, on_missing="none"))  
 
 - Use `on_missing="none"` if you want **tags to override** missing bare identifiers.
 - For stricter semantics on dotted paths, keep `on_missing="raise"` and allow tags only for bare names.
+
+## Local development
+
+```bash
+pip install -e .[dev]
+pytest -q
+ruff check .
+mypy .
+```
