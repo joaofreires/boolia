@@ -10,6 +10,7 @@ readme = "README.md"
 requires-python = ">=3.8"
 license = {text = "MIT"}
 authors = [{ name = "João Freires", email = "joaofreires@tutanota.com" }]
+maintainers = [{ name = "João Freires", email = "joaofreires@tutanota.com" }]
 keywords = ["boolean", "expression", "rules", "dsl", "jinja-like", "logic"]
 classifiers = [
   "License :: OSI Approved :: MIT License",
@@ -24,6 +25,13 @@ classifiers = [
   "Typing :: Typed",
 ]
 dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/joaofreires/boolia"
+Repository = "https://github.com/joaofreires/boolia"
+Documentation = "https://github.com/joaofreires/boolia#readme"
+Issues = "https://github.com/joaofreires/boolia/issues"
+Changelog = "https://github.com/joaofreires/boolia/releases"
 
 [project.optional-dependencies]
 test = ["pytest>=7.0"]
