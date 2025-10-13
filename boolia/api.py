@@ -125,6 +125,31 @@ class RuleGroup:
         raise TypeError(f"Unsupported RuleGroup member type: {type(member)!r}")
 
 
+ExpressionLike = Union[str, Node, Rule, "RuleGroup"]
+
+
+def _evaluate_expression(expr: ExpressionLike, kwargs: Dict[str, Any]) -> bool:
+    if isinstance(expr, RuleGroup):
+        return expr.evaluate(**kwargs)
+    if isinstance(expr, Rule):
+        return expr.evaluate(**kwargs)
+    return evaluate(expr, **kwargs)
+
+
+def evaluate_all(expressions: Iterable[ExpressionLike], **kwargs) -> bool:
+    for expr in expressions:
+        if not _evaluate_expression(expr, kwargs):
+            return False
+    return True
+
+
+def evaluate_any(expressions: Iterable[ExpressionLike], **kwargs) -> bool:
+    for expr in expressions:
+        if _evaluate_expression(expr, kwargs):
+            return True
+    return False
+
+
 class RuleBook:
     def __init__(self):
         self._rules: Dict[str, RuleEntry] = {}

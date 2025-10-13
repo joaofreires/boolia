@@ -1,4 +1,13 @@
-from .api import evaluate, compile_expr, compile_rule, Rule, RuleBook, RuleGroup
+from .api import (
+    evaluate,
+    evaluate_all,
+    evaluate_any,
+    compile_expr,
+    compile_rule,
+    Rule,
+    RuleBook,
+    RuleGroup,
+)
 from .resolver import default_resolver_factory, MissingPolicy
 from .errors import MissingVariableError
 from .functions import FunctionRegistry, DEFAULT_FUNCTIONS
@@ -6,6 +15,8 @@ from .operators import OperatorRegistry, DEFAULT_OPERATORS
 
 __all__ = [
     "evaluate",
+    "evaluate_all",
+    "evaluate_any",
     "compile_expr",
     "compile_rule",
     "Rule",

@@ -55,6 +55,18 @@ expr = "starts_with(user.name, 'Sn')"
 print(evaluate(expr, context={"user": {"name": "Snoopy"}}))  # True
 ```
 
+### Bulk evaluation
+
+```py
+from boolia import evaluate_all, evaluate_any
+
+rules = ["1", "true", "x", "y == 1"]
+context = {"x": True, "y": 1}
+
+evaluate_all(rules, context=context)  # True
+evaluate_any(["false", "x"], context=context)  # True
+```
+
 ### Custom operators
 
 ```py
