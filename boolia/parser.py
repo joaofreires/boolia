@@ -1,12 +1,17 @@
 from typing import List, Optional
 from .lexer import tokenize, Token
 from .ast import Node, Literal, Name, Unary, Binary, Call
+from .operators import OperatorRegistry, DEFAULT_OPERATORS
+
+
+NOT_BINDING_POWER = 30
 
 
 class Parser:
-    def __init__(self, tokens: List[Token]):
+    def __init__(self, tokens: List[Token], operators: Optional[OperatorRegistry] = None):
         self.tokens = tokens
         self.pos = 0
+        self.operators = operators or DEFAULT_OPERATORS
 
     def peek(self) -> Token:
         return self.tokens[self.pos]
@@ -24,19 +29,6 @@ class Parser:
             raise SyntaxError(f"Expected {typ}, got {t}")
         self.pos += 1
         return t
-
-    BP = {
-        "OR": 10,
-        "AND": 20,
-        "NOT": 30,  # unary
-        "EQ": 40,
-        "NE": 40,
-        "GT": 40,
-        "LT": 40,
-        "GE": 40,
-        "LE": 40,
-        "IN": 40,
-    }
 
     def parse(self) -> Node:
         node = self.expression(0)
@@ -58,8 +50,10 @@ class Parser:
 
     def lbp(self, t: Token) -> int:
         typ = t[0]
-        if typ in ("AND", "OR", "EQ", "NE", "GT", "LT", "GE", "LE", "IN"):
-            return self.BP[typ]
+        if typ == "NOT":
+            return NOT_BINDING_POWER
+        if self.operators.has(typ):
+            return self.operators.binding_power(typ)
         return 0
 
     def nud(self, t: Token) -> Node:
@@ -94,17 +88,18 @@ class Parser:
                 parts.append(nxt[1])
             return Name(parts)
         if typ == "NOT":
-            right = self.expression(self.BP["NOT"])
+            right = self.expression(NOT_BINDING_POWER)
             return Unary("NOT", right)
         raise SyntaxError(f"Unexpected token: {t}")
 
     def led(self, t: Token, left: Node) -> Node:
         typ, _ = t
-        if typ in ("AND", "OR", "EQ", "NE", "GT", "LT", "GE", "LE", "IN"):
-            right = self.expression(self.BP[typ])
+        if self.operators.has(typ):
+            right = self.expression(self.operators.binding_power(typ))
             return Binary(left, typ, right)
         raise SyntaxError(f"Unexpected infix token: {t}")
 
 
-def parse(source: str) -> Node:
-    return Parser(tokenize(source)).parse()
+def parse(source: str, operators: Optional[OperatorRegistry] = None) -> Node:
+    ops = operators or DEFAULT_OPERATORS
+    return Parser(tokenize(source, ops), ops).parse()

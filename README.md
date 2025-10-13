@@ -55,6 +55,28 @@ expr = "starts_with(user.name, 'Sn')"
 print(evaluate(expr, context={"user": {"name": "Snoopy"}}))  # True
 ```
 
+### Custom operators
+
+```py
+from boolia import evaluate, DEFAULT_OPERATORS
+
+custom_ops = DEFAULT_OPERATORS.copy()
+custom_ops.register(
+    "XOR", # The operator identifier
+    precedence=20, # Higher precedence than AND/OR
+    evaluator=lambda left, right: bool(left) ^ bool(right), # XOR logic
+    keywords=("xor",), # Use "xor" in expressions
+)
+
+print(evaluate("true xor false", operators=custom_ops))  # True
+print(evaluate("true xor true", operators=custom_ops))   # False
+```
+
+Operators can be declared with `keywords=("xor",)` for word-style syntax or `symbols=("^",)`
+for symbolic tokens. Use `compile_rule(expr, operators=custom_ops)` to persist custom
+operators inside compiled rules. When evaluating rules or rule groups you can still pass a
+different registry with `operators=` if you need to override their behavior.
+
 ### RuleBook
 
 ```py

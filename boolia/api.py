@@ -6,14 +6,15 @@ from .parser import parse
 from .ast import Node
 from .resolver import default_resolver_factory, MissingPolicy
 from .functions import FunctionRegistry, DEFAULT_FUNCTIONS
+from .operators import OperatorRegistry, DEFAULT_OPERATORS
 
 
 RuleEntry = Union["Rule", "RuleGroup"]
 RuleMember = Union[str, RuleEntry]
 
 
-def compile_expr(source: str) -> Node:
-    return parse(source)
+def compile_expr(source: str, *, operators: Optional[OperatorRegistry] = None) -> Node:
+    return parse(source, operators)
 
 
 def evaluate(
@@ -25,26 +26,33 @@ def evaluate(
     on_missing: MissingPolicy = "false",
     default_value: Any = None,
     functions: Optional[FunctionRegistry] = None,
+    operators: Optional[OperatorRegistry] = None,
 ) -> bool:
-    node = compile_expr(source_or_ast) if isinstance(source_or_ast, str) else source_or_ast
+    ops = operators or DEFAULT_OPERATORS
+    node = compile_expr(source_or_ast, operators=ops) if isinstance(source_or_ast, str) else source_or_ast
     ctx = context or {}
     tg = tags or set()
     res = resolver or default_resolver_factory(ctx, on_missing=on_missing, default_value=default_value)
     fns = functions or DEFAULT_FUNCTIONS
-    out = node.eval(res, tg, fns)
+    out = node.eval(res, tg, fns, ops)
     return bool(out)
 
 
 @dataclass
 class Rule:
     ast: Node
+    operators: OperatorRegistry = DEFAULT_OPERATORS
 
-    def evaluate(self, **kwargs) -> bool:
-        return evaluate(self.ast, **kwargs)
+    def evaluate(self, *, operators: Optional[OperatorRegistry] = None, **kwargs) -> bool:
+        local_kwargs = kwargs.copy()
+        implicit_ops = local_kwargs.pop("operators", None)
+        ops = operators or implicit_ops or self.operators
+        return evaluate(self.ast, operators=ops, **local_kwargs)
 
 
-def compile_rule(source: str) -> Rule:
-    return Rule(compile_expr(source))
+def compile_rule(source: str, *, operators: Optional[OperatorRegistry] = None) -> Rule:
+    ops = operators or DEFAULT_OPERATORS
+    return Rule(compile_expr(source, operators=ops), ops)
 
 
 class RuleGroup:
