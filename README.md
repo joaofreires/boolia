@@ -7,6 +7,7 @@ A tiny, safe **boolean expression** engine: like Jinja for logic.
 - **Tags**: bare identifiers evaluate `True` if present in a `tags: set[str]`
 - **Functions**: user-registered, safe callables (`starts_with`, `matches`, ...)
 - **RuleBook**: name your rules and evaluate them later
+- **RuleGroup**: compose rules with `all`/`any` semantics and nested groups
 - **Missing policy**: choose to **raise** or substitute **None/False/custom default**
 
 ```py
@@ -60,20 +61,32 @@ print(evaluate(expr, context={"user": {"name": "João"}}))  # True
 ### RuleBook
 
 ```py
-from boolia import RuleBook, DEFAULT_FUNCTIONS
+from boolia import RuleBook, RuleGroup
 
 rules = RuleBook()
 rules.add("adult", "user.age >= 18")
 rules.add("brazilian", "starts_with(user.country, 'Br')")
-rules.add("eligible", "adult() and (brazilian() or contains(user.roles, 'vip'))")
+rules.add("vip", "contains(user.roles, 'vip')")
+rules.add_group(
+    "eligible",
+    mode="all",
+    members=[
+        "adult",
+        RuleGroup(mode="any", members=["brazilian", "vip"]),
+    ],
+)
 
-# Expose rule names as functions
-DEFAULT_FUNCTIONS.register("adult",     lambda **kw: rules.get("adult").evaluate(**kw))
-DEFAULT_FUNCTIONS.register("brazilian", lambda **kw: rules.get("brazilian").evaluate(**kw))
-
-ok = rules.evaluate("eligible", context={"user": {"age": 22, "country": "Brazil", "roles": ["member"]}})
+ok = rules.evaluate(
+    "eligible",
+    context={"user": {"age": 22, "country": "Brazil", "roles": ["member"]}},
+)
 print(ok)  # True
+
+print(rules.evaluate("eligible", context={"user": {"age": 22, "country": "Chile", "roles": ["vip"]}}))  # True
+print(rules.evaluate("eligible", context={"user": {"age": 17, "country": "Chile", "roles": ["member"]}}))  # False
 ```
+
+`RuleGroup` members can be rule names, already compiled `Rule` objects, or other `RuleGroup` instances. Nested groups short-circuit according to their mode (`all`/`any`), empty groups are vacuously `True`/`False`, and cycles raise a helpful error. Add groups with `RuleBook.add_group` or register existing ones with `RuleBook.register`.
 
 ### Missing policy
 

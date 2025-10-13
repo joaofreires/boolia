@@ -9,7 +9,7 @@ description = "Tiny, safe boolean-expression language with dotted paths, functio
 readme = "README.md"
 requires-python = ">=3.8"
 license = {text = "MIT"}
-authors = [{ name = "Your Name", email = "you@example.com" }]
+authors = [{ name = "João Freires", email = "joaofreires@tutanota.com" }]
 keywords = ["boolean", "expression", "rules", "dsl", "jinja-like", "logic"]
 classifiers = [
   "License :: OSI Approved :: MIT License",
