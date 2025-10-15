@@ -9,6 +9,7 @@ A tiny, safe **boolean expression** engine: like Jinja for logic.
 - **RuleBook**: name your rules and evaluate them later
 - **RuleGroup**: compose rules with `all`/`any` semantics and nested groups
 - **Missing policy**: choose to **raise** or substitute **None/False/custom default**
+- **Serialization**: export/import rule books as JSON or (optionally) YAML
 
 ```py
 from boolia import evaluate, RuleBook, DEFAULT_FUNCTIONS
@@ -118,6 +119,34 @@ print(rules.evaluate("eligible", context={"user": {"age": 17, "country": "Chile"
 ```
 
 `RuleGroup` members can be rule names, already compiled `Rule` objects, or other `RuleGroup` instances. Nested groups short-circuit according to their mode (`all`/`any`), empty groups are vacuously `True`/`False`, and cycles raise a helpful error. Add groups with `RuleBook.add_group` or register existing ones with `RuleBook.register`.
+
+#### RuleBook serialization
+
+```py
+from boolia import RuleBook
+
+rules = RuleBook()
+rules.add("adult", "user.age >= 18")
+rules.add_group("gate", members=["adult"])
+
+payload = rules.to_dict()
+clone = RuleBook.from_dict(payload)
+assert clone.evaluate("gate", context={"user": {"age": 21}})
+
+json_blob = rules.to_json(indent=2)
+loaded = RuleBook.from_json(json_blob)
+
+# Optional YAML helpers (requires: pip install boolia[yaml])
+yaml_blob = rules.to_yaml()
+RuleBook.from_yaml(yaml_blob)
+```
+
+- `RuleBook.to_dict` / `RuleBook.from_dict` are the canonical API and perform schema validation by default.
+- `to_json` / `from_json` are always available via the standard library.
+- `to_yaml` / `from_yaml` lazily import PyYAML; missing dependencies raise a clear `RulebookSerializationError`.
+- Pass custom JSON encoders/decoders (e.g. `orjson.dumps`) via the `encoder=` / `decoder=` keyword arguments.
+
+Payloads include a schema version to enable future migrations. Inline rules or groups are supported when importing by default; pass `allow_inline=False` to reject them.
 
 ### Missing policy
 
