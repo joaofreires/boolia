@@ -3,7 +3,7 @@
 A tiny, safe **boolean expression** engine: like Jinja for logic.
 
 - **Grammar**: `and`, `or`, `not`, parentheses, comparisons (`== != > >= <= <`), `in`
-- **Values**: numbers, strings, booleans, `null/None`, identifiers, dotted paths (`user.age`, `house.light.on`)
+- **Values**: numbers, strings, booleans, `null/None`, identifiers, dotted paths (`user.age`, `house.light.on`, `cart.owner.country`, `cart.owner.get_country`)
 - **Tags**: bare identifiers evaluate `True` if present in a `tags: set[str]`
 - **Functions**: user-registered, safe callables (`starts_with`, `matches`, ...)
 - **RuleBook**: name your rules and evaluate them later
@@ -43,6 +43,33 @@ tags = {"beta"}
 expr = "user.age >= 18 and 'admin' in user.roles"
 print(evaluate(expr, context=ctx, tags=tags))  # True
 ```
+
+### Context traversal
+
+When context values are plain objects, boolia walks their public attributes and automatically invokes bound methods that accept no arguments, letting you jump across Python models without adapters.
+
+```py
+from boolia import evaluate
+
+
+class Account:
+    country = "Australia"
+    province = "NSW"
+
+    def get_country(self):
+        return self.country
+
+
+class User:
+    def get_account(self):
+        return Account()
+
+
+ctx = {"user": User()}
+print(evaluate("user.get_account.get_country == 'Australia' and user.get_account.province == 'NSW'", context=ctx))  # True
+```
+
+If a bound method requires positional arguments, the resolver treats it as a missing path. That means `on_missing="raise"` surfaces a `MissingVariableError`, while the other policies (`false`, `none`, or `default`) return their configured fallback.
 
 ### Functions
 
