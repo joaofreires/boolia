@@ -1,11 +1,13 @@
-from typing import Any, Callable, Dict, List, Literal
+from collections.abc import Mapping
+from types import MethodType
+from typing import Any, Callable, List, Literal
 from .errors import MissingVariableError
 
 MissingPolicy = Literal["raise", "none", "false", "default"]
 
 
 def default_resolver_factory(
-    context: Dict[str, Any],
+    context: Mapping[str, Any],
     *,
     on_missing: MissingPolicy = "false",
     default_value: Any = None,
@@ -24,10 +26,18 @@ def default_resolver_factory(
     def resolve(parts: List[str]) -> Any:
         cur: Any = context
         for p in parts:
-            if isinstance(cur, dict) and p in cur:
+            if isinstance(cur, Mapping) and p in cur:
                 cur = cur[p]
-            else:
+                continue
+            try:
+                cur = getattr(cur, p)
+            except AttributeError:
                 return _missing(parts)
+            if isinstance(cur, MethodType):
+                try:
+                    cur = cur()
+                except TypeError:
+                    return _missing(parts)
         return cur
 
     return resolve
