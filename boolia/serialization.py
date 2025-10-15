@@ -3,11 +3,22 @@ from __future__ import annotations
 import importlib
 import json
 import os
-from typing import Any, Dict, List, Sequence
+from typing import Any, Dict, Iterable, List, Sequence, Tuple, Type, TypeVar, Protocol
 
 from .errors import RulebookSerializationError, RulebookValidationError, RulebookVersionError
 
 SCHEMA_VERSION = "1.0"
+
+
+class SupportsRulebook(Protocol):
+    def register(self, name: str, rule: Any) -> Any: ...
+
+    def get(self, name: str) -> Any: ...
+
+    def names(self) -> Iterable[str]: ...
+
+
+RulebookT = TypeVar("RulebookT", bound="SupportsRulebook")
 
 
 def rulebook_to_dict(
@@ -47,12 +58,12 @@ def rulebook_to_dict(
 
 
 def rulebook_from_dict(
-    rulebook_cls,
+    rulebook_cls: Type[RulebookT],
     payload: Dict[str, Any],
     *,
     validate: bool = True,
     allow_inline: bool = True,
-):
+) -> RulebookT:
     from .api import RuleGroup, compile_rule  # local import to avoid circular dependency
 
     if validate:
@@ -123,14 +134,14 @@ def rulebook_to_json(
 
 
 def rulebook_from_json(
-    rulebook_cls,
+    rulebook_cls: Type[RulebookT],
     source,
     *,
     validate: bool = True,
     allow_inline: bool = True,
     decoder=None,
     **json_kwargs,
-):
+) -> RulebookT:
     payload = _load_json(source, decoder=decoder, **json_kwargs)
     if not isinstance(payload, dict):
         raise RulebookValidationError("JSON payload must deserialize to a dictionary")
@@ -159,13 +170,13 @@ def rulebook_to_yaml(rulebook, *, target=None, validate: bool = True, **yaml_kwa
 
 
 def rulebook_from_yaml(
-    rulebook_cls,
+    rulebook_cls: Type[RulebookT],
     source,
     *,
     validate: bool = True,
     allow_inline: bool = True,
     **yaml_kwargs,
-):
+) -> RulebookT:
     yaml_mod = _require_yaml()
     payload = _load_yaml(yaml_mod, source, **yaml_kwargs)
     if not isinstance(payload, dict):
@@ -200,7 +211,7 @@ def validate_payload(payload: Dict[str, Any], *, allow_inline: bool) -> None:
         _validate_entry(entry, allow_inline=allow_inline, path=(name,))
 
 
-def _validate_entry(entry: Any, *, allow_inline: bool, path: Sequence[str]) -> None:
+def _validate_entry(entry: Any, *, allow_inline: bool, path: Tuple[str, ...]) -> None:
     if not isinstance(entry, dict):
         raise RulebookValidationError(_format_path(path, "Entry must be a dictionary"))
 
@@ -239,7 +250,7 @@ def _serialize_entry(
     *,
     object_names: Dict[int, str],
     stack: List[int],
-    path: Sequence[str],
+    path: Tuple[str, ...],
 ) -> Dict[str, Any]:
     from .api import Rule, RuleGroup  # local import to avoid circular dependency
 
@@ -250,7 +261,7 @@ def _serialize_entry(
     raise RulebookSerializationError(_format_path(path, f"Unsupported entry type: {type(entry)!r}"))
 
 
-def _serialize_rule(rule, *, object_names: Dict[int, str], path: Sequence[str]) -> Dict[str, Any]:
+def _serialize_rule(rule, *, object_names: Dict[int, str], path: Tuple[str, ...]) -> Dict[str, Any]:
     if rule.source is None:
         raise RulebookSerializationError(_format_path(path, "Rule is missing original source; cannot serialize"))
     return {
@@ -264,7 +275,7 @@ def _serialize_group(
     *,
     object_names: Dict[int, str],
     stack: List[int],
-    path: Sequence[str],
+    path: Tuple[str, ...],
 ) -> Dict[str, Any]:
     ident = id(group)
     if ident in stack:
@@ -291,7 +302,7 @@ def _serialize_member(
     *,
     object_names: Dict[int, str],
     stack: List[int],
-    path: Sequence[str],
+    path: Tuple[str, ...],
 ) -> Any:
     from .api import Rule, RuleGroup  # local import to avoid circular dependency
 
@@ -332,6 +343,8 @@ def _populate_group(group, members: Sequence[Any], book, *, allow_inline: bool, 
             kind = member.get("kind")
             if kind == "rule":
                 source = member.get("source")
+                if not isinstance(source, str):
+                    raise RulebookValidationError("Inline rule members require a 'source' string")
                 inline_rule = compile_rule(source)
                 group.add(inline_rule)
                 continue
