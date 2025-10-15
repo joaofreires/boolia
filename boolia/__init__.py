@@ -9,7 +9,12 @@ from .api import (
     RuleGroup,
 )
 from .resolver import default_resolver_factory, MissingPolicy
-from .errors import MissingVariableError
+from .errors import (
+    MissingVariableError,
+    RulebookSerializationError,
+    RulebookValidationError,
+    RulebookVersionError,
+)
 from .functions import FunctionRegistry, DEFAULT_FUNCTIONS
 from .operators import OperatorRegistry, DEFAULT_OPERATORS
 
@@ -25,6 +30,9 @@ __all__ = [
     "default_resolver_factory",
     "MissingPolicy",
     "MissingVariableError",
+    "RulebookSerializationError",
+    "RulebookValidationError",
+    "RulebookVersionError",
     "FunctionRegistry",
     "DEFAULT_FUNCTIONS",
     "OperatorRegistry",

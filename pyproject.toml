@@ -36,6 +36,7 @@ Changelog = "https://github.com/joaofreires/boolia/releases"
 [project.optional-dependencies]
 test = ["pytest>=7.0"]
 dev = ["pytest>=7.0", "ruff>=0.5.7", "mypy>=1.11.0"]
+yaml = ["PyYAML>=6.0"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["boolia"]

@@ -2,6 +2,15 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Callable, Dict, Iterable, Literal, Optional, Set, Union
 
+from .serialization import (
+    rulebook_from_dict,
+    rulebook_from_json,
+    rulebook_from_yaml,
+    rulebook_to_dict,
+    rulebook_to_json,
+    rulebook_to_yaml,
+)
+
 from .parser import parse
 from .ast import Node
 from .resolver import default_resolver_factory, MissingPolicy
@@ -42,6 +51,7 @@ def evaluate(
 class Rule:
     ast: Node
     operators: OperatorRegistry = DEFAULT_OPERATORS
+    source: Optional[str] = None
 
     def evaluate(self, *, operators: Optional[OperatorRegistry] = None, **kwargs) -> bool:
         local_kwargs = kwargs.copy()
@@ -52,7 +62,7 @@ class Rule:
 
 def compile_rule(source: str, *, operators: Optional[OperatorRegistry] = None) -> Rule:
     ops = operators or DEFAULT_OPERATORS
-    return Rule(compile_expr(source, operators=ops), ops)
+    return Rule(compile_expr(source, operators=ops), ops, source)
 
 
 class RuleGroup:
@@ -192,3 +202,74 @@ class RuleBook:
         self._rules[name] = rule
         if isinstance(rule, RuleGroup):
             rule.bind_lookup(self.get)
+
+    def to_dict(
+        self,
+        *,
+        version: str = "1.0",
+        include_metadata: bool = True,
+        validate: bool = True,
+    ) -> Dict[str, Any]:
+        return rulebook_to_dict(
+            self,
+            version=version,
+            include_metadata=include_metadata,
+            validate=validate,
+        )
+
+    @classmethod
+    def from_dict(
+        cls,
+        payload: Dict[str, Any],
+        *,
+        validate: bool = True,
+        allow_inline: bool = True,
+    ) -> "RuleBook":
+        return rulebook_from_dict(
+            cls,
+            payload,
+            validate=validate,
+            allow_inline=allow_inline,
+        )
+
+    def to_json(self, target=None, *, encoder=None, **json_kwargs):
+        return rulebook_to_json(self, target=target, encoder=encoder, **json_kwargs)
+
+    @classmethod
+    def from_json(
+        cls,
+        source,
+        *,
+        validate: bool = True,
+        allow_inline: bool = True,
+        decoder=None,
+        **json_kwargs,
+    ) -> "RuleBook":
+        return rulebook_from_json(
+            cls,
+            source,
+            validate=validate,
+            allow_inline=allow_inline,
+            decoder=decoder,
+            **json_kwargs,
+        )
+
+    def to_yaml(self, target=None, **yaml_kwargs):
+        return rulebook_to_yaml(self, target=target, **yaml_kwargs)
+
+    @classmethod
+    def from_yaml(
+        cls,
+        source,
+        *,
+        validate: bool = True,
+        allow_inline: bool = True,
+        **yaml_kwargs,
+    ) -> "RuleBook":
+        return rulebook_from_yaml(
+            cls,
+            source,
+            validate=validate,
+            allow_inline=allow_inline,
+            **yaml_kwargs,
+        )
